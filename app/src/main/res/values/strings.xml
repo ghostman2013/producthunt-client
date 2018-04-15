@@ -1,3 +1,6 @@
 <resources>
+    <!-- Labels -->
     <string name="app_name">ProductHunt</string>
+    <!-- Messages -->
+    <string name="msg_no_items">No items</string>
 </resources>
