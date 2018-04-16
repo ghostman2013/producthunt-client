@@ -41,7 +41,7 @@ public class ProductsFragment extends Fragment {
         binding.setModel(model);
 
         mAdapter.add(new ProductViewModel("Title", "Description",
-                23, "http://www.contedevel.com"));
+                23, null));
         mAdapter.notifyDataSetChanged();
         model.setHasItems(mAdapter.getItemCount() > 0);
 
@@ -90,7 +90,7 @@ public class ProductsFragment extends Fragment {
         private final String mThumbnailUrl;
 
         ProductViewModel(String title, String description,
-                         int votes, String thumbnailUrl) {
+                         int votes, @Nullable String thumbnailUrl) {
             mTitle = title;
             mDescription = description;
             mVotes = votes;
