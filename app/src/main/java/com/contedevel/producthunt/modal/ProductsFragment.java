@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,6 +17,8 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.contedevel.producthunt.BR;
+import com.contedevel.producthunt.client.Post;
+import com.contedevel.producthunt.client.ServiceApi;
 import com.contedevel.producthunt.databinding.FragmentProductsBinding;
 import com.contedevel.producthunt.databinding.ItemProductBinding;
 import com.contedevel.producthunt.util.RecyclerConfig;
@@ -22,7 +27,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ProductsFragment extends Fragment {
+public class ProductsFragment extends Fragment
+        implements LoaderManager.LoaderCallbacks<Post[]> {
+
+    private static final String KEY_TOPIC_ID = "topic_id";
 
     private ProductsAdapter mAdapter = new ProductsAdapter();
 
@@ -40,11 +48,6 @@ public class ProductsFragment extends Fragment {
         ViewModel model = buildModel(getContext());
         binding.setModel(model);
 
-        mAdapter.add(new ProductViewModel("Title", "Description",
-                23, null));
-        mAdapter.notifyDataSetChanged();
-        model.setHasItems(mAdapter.getItemCount() > 0);
-
         return binding.getRoot();
     }
 
@@ -55,6 +58,53 @@ public class ProductsFragment extends Fragment {
                 .setAdapter(mAdapter)
                 .build();
         return new ViewModel(config, false);
+    }
+
+    public void reload(int topicId) {
+        Bundle args = new Bundle();
+        args.putInt(KEY_TOPIC_ID, topicId);
+        getLoaderManager().restartLoader(0, args, this);
+    }
+
+    @NonNull
+    @Override
+    public Loader<Post[]> onCreateLoader(int id, Bundle args) {
+
+        if (args == null || !args.containsKey(KEY_TOPIC_ID)) {
+            throw new IllegalArgumentException("Bundle doesn't contain a topic ID");
+        }
+
+        int topicId = args.getInt(KEY_TOPIC_ID);
+        Context context = getContext();
+        assert context != null;
+        return new PostsLoader(context, topicId);
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Post[]> loader, Post[] data) {
+
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Post[]> loader) {
+
+    }
+
+    private static class PostsLoader extends AsyncTaskLoader<Post[]> {
+
+        private ServiceApi mApi = new ServiceApi();
+        private int mTopicId;
+
+        PostsLoader(@NonNull Context context, int topicId) {
+            super(context);
+            mTopicId = topicId;
+        }
+
+        @Nullable
+        @Override
+        public Post[] loadInBackground() {
+            return mApi.getPosts(mTopicId);
+        }
     }
 
     public static class ViewModel extends BaseObservable {
